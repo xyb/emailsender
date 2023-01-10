@@ -23,7 +23,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # SECURITY WARNING: keep the secret key used in production secret!
 SECRET_KEY = getenv(
     'DJANGO_SECRET_KEY',
-    'django-insecure-j=wyi0+-&c$^i_gq*0cuddx88a67q$$h66si^(^0gs1@^5@$mx',
+    'django-insecure-secret-key',
 )
 
 # SECURITY WARNING: don't run with debug turned on in production!
@@ -50,11 +50,11 @@ INSTALLED_APPS = [
     'corsheaders',
 ]
 
-if getenv('EMAIL_BACKEND_TEST'):
+if bool(int(getenv('EMAIL_BACKEND_TEST') or 0)):
     EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
 else:
     EMAIL_BACKEND = "mailer.backend.DbBackend"
-MAILER_EMPTY_QUEUE_SLEEP = 2
+MAILER_EMPTY_QUEUE_SLEEP = int(getenv('MAILER_EMPTY_QUEUE_SLEEP', 5))
 
 EMAIL_USE_SSL = bool(int(getenv('EMAIL_USE_SSL', 0)))
 EMAIL_USE_TLS = bool(int(getenv('EMAIL_USE_TLS', 0)))
