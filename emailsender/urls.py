@@ -16,6 +16,9 @@ Including another URLconf
 from django.contrib import admin
 from django.urls import path
 
+from .views import EmailSenderView
+
 urlpatterns = [
     path('admin/', admin.site.urls),
+    path('', EmailSenderView.as_view(), name='email-sender')
 ]

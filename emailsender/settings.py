@@ -10,6 +10,7 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/4.1/ref/settings/
 """
 
+from os import getenv
 from pathlib import Path
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
@@ -20,27 +21,63 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/4.1/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-j=wyi0+-&c$^i_gq*0cuddx88a67q$$h66si^(^0gs1@^5@$mx'
+SECRET_KEY = getenv(
+    'DJANGO_SECRET_KEY',
+    'django-insecure-j=wyi0+-&c$^i_gq*0cuddx88a67q$$h66si^(^0gs1@^5@$mx',
+)
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = bool(int(getenv('DJANGO_DEBUG', 1)))
 
-ALLOWED_HOSTS = []
+if getenv('DJANGO_ALLOWED_HOSTS'):
+    ALLOWED_HOSTS = getenv('DJANGO_ALLOWED_HOSTS').split(',')
+else:
+    ALLOWED_HOSTS = ['*']
 
 
 # Application definition
 
 INSTALLED_APPS = [
+    'whitenoise.runserver_nostatic',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'rest_framework',
+    'mailer',
+    'corsheaders',
 ]
 
+if getenv('EMAIL_BACKEND_TEST'):
+    EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
+else:
+    EMAIL_BACKEND = "mailer.backend.DbBackend"
+MAILER_EMPTY_QUEUE_SLEEP = 2
+
+EMAIL_USE_SSL = bool(int(getenv('EMAIL_USE_SSL', 0)))
+EMAIL_USE_TLS = bool(int(getenv('EMAIL_USE_TLS', 0)))
+EMAIL_HOST = getenv('EMAIL_HOST', 'smtp.mydomain.com')
+EMAIL_HOST_USER = getenv('EMAIL_HOST_USER', 'xyb@mydomain.com')
+EMAIL_HOST_PASSWORD = getenv('EMAIL_HOST_PASSWORD', 'password')
+EMAIL_PORT = int(getenv('EMAIL_PORT', 465))
+EMAIL_FROM = getenv('EMAIL_FROM', 'xyb@mydomain.com')
+EMAIL_TIMEOUT = int(getenv('EMAIL_TIMEOUT', 3))
+
+EMAIL_WHITE_LIST = getenv('EMAIL_WHITE_LIST', r'.*')
+EMAIL_WHITE_LIST_MESSAGE = getenv('EMAIL_WHITE_LIST_MESSAGE',
+                                  'email address not in white list')
+
+if getenv('CORS_ALLOWED_ORIGINS'):
+    CORS_ALLOWED_ORIGINS = getenv('CORS_ALLOWED_ORIGINS').split(',')
+elif getenv('CORS_ALLOW_ALL_ORIGINS'):
+    CORS_ALLOW_ALL_ORIGINS = True
+
 MIDDLEWARE = [
+    'corsheaders.middleware.CorsMiddleware',
     'django.middleware.security.SecurityMiddleware',
+    'whitenoise.middleware.WhiteNoiseMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
@@ -75,10 +112,21 @@ WSGI_APPLICATION = 'emailsender.wsgi.application'
 
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
+        'ENGINE': getenv('DB_ENGINE', 'django.db.backends.sqlite3'),
+        'NAME': getenv('DB_NAME', BASE_DIR / 'db.sqlite3'),
+        'USER': getenv('DB_USER', 'postgres'),
+        'PASSWORD': getenv('DB_PASSWORD', ''),
+        'HOST': getenv('DB_HOST', ''),
+        'PORT': getenv('DB_PORT', ''),
     }
 }
+if 'mysql' in DATABASES['default']['ENGINE']:
+    DATABASES['default']['OPTIONS'] = {
+        # fix mysql error 1452
+        "init_command": "SET foreign_key_checks = 0;",
+        # fix mysql emoji issue
+        'charset': 'utf8mb4',
+    }
 
 
 # Password validation
@@ -116,6 +164,7 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/4.1/howto/static-files/
 
 STATIC_URL = 'static/'
+STATIC_ROOT = BASE_DIR / "staticfiles"
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/4.1/ref/settings/#default-auto-field
