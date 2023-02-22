@@ -1,11 +1,25 @@
 from django.conf import settings
-from django.core.mail import send_mail
+from django.core.mail import EmailMultiAlternatives
 from rest_framework import status
 from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from .serializers import EmailSenderSerializer
+
+
+def send_mail(subject, message, html_message, from_email, to, cc, bcc):
+    email = EmailMultiAlternatives(
+        subject=subject,
+        body=message,
+        from_email=from_email,
+        to=[to],
+        cc=[cc],
+        bcc=[bcc],
+    )
+    if html_message:
+        email.attach_alternative(html_message, 'text/html')
+    return email.send()
 
 
 class EmailSenderView(APIView):
@@ -20,11 +34,13 @@ class EmailSenderView(APIView):
         if serializer.is_valid(raise_exception=False):
             msg = serializer.validated_data
             send_mail(
-                msg['subject'],
-                msg['message'],
-                settings.EMAIL_FROM,
-                [msg['recipient_email']],
+                subject=msg['subject'],
+                message=msg['message'],
                 html_message=msg['html_message'] or None,
+                from_email=settings.EMAIL_FROM,
+                to=msg['recipient_email'],
+                cc=msg['cc'],
+                bcc=msg['bcc'],
             )
 
             return Response(

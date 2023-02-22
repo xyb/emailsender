@@ -14,6 +14,16 @@ class EmailSenderSerializer(serializers.Serializer):
         validators=[email_regex],
         help_text='required',
     )
+    cc = serializers.EmailField(
+        required=False,
+        validators=[email_regex],
+        help_text='not required',
+    )
+    bcc = serializers.EmailField(
+        required=False,
+        validators=[email_regex],
+        help_text='not required',
+    )
     html_message = serializers.CharField(
         required=False,
         allow_blank=True,
@@ -21,4 +31,5 @@ class EmailSenderSerializer(serializers.Serializer):
     )
 
     class Meta:
-        fields = ['receipient_email', 'subject', 'message', 'html_message']
+        fields = ['receipient_email', 'subject', 'cc', 'bcc', 'message',
+                  'html_message']
