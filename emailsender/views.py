@@ -36,11 +36,11 @@ class EmailSenderView(APIView):
             send_mail(
                 subject=msg['subject'],
                 message=msg['message'],
-                html_message=msg['html_message'] or None,
+                html_message=msg.get('html_message') or None,
                 from_email=settings.EMAIL_FROM,
                 to=msg['recipient_email'],
-                cc=msg['cc'],
-                bcc=msg['bcc'],
+                cc=msg.get('cc'),
+                bcc=msg.get('bcc'),
             )
 
             return Response(
