@@ -28,6 +28,7 @@ class EmailSenderSerializer(serializers.Serializer):
     )
     html_message = serializers.CharField(
         required=False,
+        allow_null=True,
         allow_blank=True,
         help_text='not required',
     )
