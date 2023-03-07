@@ -16,11 +16,13 @@ class EmailSenderSerializer(serializers.Serializer):
     )
     cc = serializers.EmailField(
         required=False,
+        allow_null=True,
         validators=[email_regex],
         help_text='not required',
     )
     bcc = serializers.EmailField(
         required=False,
+        allow_null=True,
         validators=[email_regex],
         help_text='not required',
     )
